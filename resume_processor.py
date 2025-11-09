@@ -1,8 +1,3 @@
-"""
-Resume Processor Module
-Handles extraction of text from PDF, PNG, JPG, and TXT files
-"""
-
 import os
 import json
 from pathlib import Path
@@ -14,188 +9,102 @@ import mimetypes
 from config import DATASETS_DIR
 
 class ResumeProcessor:
-    """Process resume files and extract text content"""
-    
-    SUPPORTED_FORMATS = {
-        'application/pdf': 'pdf',
-        'image/png': 'png',
-        'image/jpeg': 'jpg',
-        'text/plain': 'txt'
-    }
+    """Process resume files and extract text"""
     
     def __init__(self):
         self.resumes_dir = DATASETS_DIR / "resumes"
         self.resumes_dir.mkdir(exist_ok=True)
         print("✅ Resume Processor initialized")
     
-    def process_resume(self, file_path, candidate_name=None):
+    def process_resume(self, file, candidate_name=None):
         """
-        Process a resume file and extract text
+        Process resume file and extract text
         
         Args:
-            file_path: Path to resume file (PDF, PNG, JPG, or TXT)
-            candidate_name: Optional name for the candidate
+            file: File object from Flask request
+            candidate_name: Optional candidate name
         
         Returns:
-            Dictionary with extracted text, metadata, and file info
+            Dict with success, resume_text, and metadata
         """
-        file_path = Path(file_path)
-        
-        if not file_path.exists():
-            raise FileNotFoundError(f"Resume file not found: {file_path}")
-        
-        # Validate file format
-        file_ext = file_path.suffix.lower()
-        mime_type, _ = mimetypes.guess_type(str(file_path))
-        
-        print(f"\n{'='*70}")
-        print(f"📄 PROCESSING RESUME: {file_path.name}")
-        print(f"{'='*70}")
-        print(f"   File Type: {file_ext}")
-        print(f"   File Size: {file_path.stat().st_size / 1024:.2f} KB")
-        
         try:
+            # Get filename
+            filename = file.filename if hasattr(file, 'filename') else 'resume'
+            file_ext = Path(filename).suffix.lower()
+            
+            print(f"\n📄 PROCESSING RESUME")
+            print(f"   Filename: {filename}")
+            print(f"   Format: {file_ext}")
+            
             # Extract text based on file type
-            if file_ext.lower() == '.pdf':
-                extracted_text = self._extract_from_pdf(file_path)
-            elif file_ext.lower() in ['.png', '.jpg', '.jpeg']:
-                extracted_text = self._extract_from_image(file_path)
-            elif file_ext.lower() == '.txt':
-                extracted_text = self._extract_from_txt(file_path)
+            if file_ext == '.pdf':
+                text = self._extract_from_pdf(file)
+            elif file_ext in ['.png', '.jpg', '.jpeg']:
+                text = self._extract_from_image(file)
+            elif file_ext == '.txt':
+                text = self._extract_from_txt(file)
             else:
-                raise ValueError(f"Unsupported file format: {file_ext}")
+                raise ValueError(f"Unsupported format: {file_ext}")
             
             # Create metadata
             if not candidate_name:
-                candidate_name = file_path.stem
+                candidate_name = Path(filename).stem
             
             metadata = {
                 'candidate_name': candidate_name,
-                'original_filename': file_path.name,
-                'file_format': file_ext.lower().strip('.'),
-                'file_size_kb': round(file_path.stat().st_size / 1024, 2),
+                'original_filename': filename,
+                'file_format': file_ext.strip('.'),
                 'processing_date': datetime.now().isoformat(),
-                'text_length': len(extracted_text),
-                'words': len(extracted_text.split())
-            }
-            
-            result = {
-                'success': True,
-                'resume_text': extracted_text,
-                'metadata': metadata
+                'text_length': len(text),
+                'words': len(text.split())
             }
             
             print(f"   ✅ Extracted {metadata['words']} words")
-            print(f"   📝 Text Length: {metadata['text_length']} characters")
-            print("="*70 + "\n")
             
-            return result
+            return {
+                'success': True,
+                'resume_text': text,
+                'metadata': metadata
+            }
         
         except Exception as e:
-            print(f"   ❌ Error processing resume: {e}")
+            print(f"   ❌ Error: {e}")
             return {
                 'success': False,
                 'error': str(e),
                 'resume_text': ''
             }
     
-    def _extract_from_pdf(self, file_path):
-        """Extract text from PDF file"""
-        print("   🔍 Extracting from PDF...")
+    def _extract_from_pdf(self, file):
+        """Extract text from PDF"""
         text = ""
-        
         try:
-            with open(file_path, 'rb') as pdf_file:
-                pdf_reader = PyPDF2.PdfReader(pdf_file)
-                num_pages = len(pdf_reader.pages)
-                print(f"      Pages: {num_pages}")
-                
-                for page_num, page in enumerate(pdf_reader.pages, 1):
-                    page_text = page.extract_text()
-                    if page_text:
-                        text += page_text + "\n"
-                    print(f"      ✓ Page {page_num}/{num_pages} extracted")
-            
-            if not text.strip():
-                raise ValueError("No text extracted from PDF")
-            
+            pdf_reader = PyPDF2.PdfReader(file)
+            for page in pdf_reader.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text + "\n"
             return text.strip()
-        
         except Exception as e:
-            raise Exception(f"PDF extraction failed: {str(e)}")
+            raise Exception(f"PDF extraction failed: {e}")
     
-    def _extract_from_image(self, file_path):
-        """Extract text from image using OCR (PNG, JPG)"""
-        print("   🔍 Extracting from Image using OCR...")
-        
+    def _extract_from_image(self, file):
+        """Extract text from image using OCR"""
         try:
-            # Verify Tesseract is installed
-            pytesseract.pytesseract.get_tesseract_version()
-        except Exception as e:
-            raise Exception(
-                "Tesseract OCR not installed. "
-                "Install with: sudo apt-get install tesseract-ocr (Linux) "
-                "or brew install tesseract (Mac)"
-            )
-        
-        try:
-            image = Image.open(file_path)
-            
-            # Convert to RGB if necessary
-            if image.mode != 'RGB':
-                image = image.convert('RGB')
-            
-            print(f"      Image size: {image.size}")
-            
-            # Extract text using OCR
-            text = pytesseract.image_to_string(image)
-            
-            if not text.strip():
-                raise ValueError("No text detected in image")
-            
+            img = Image.open(file)
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+            text = pytesseract.image_to_string(img)
             return text.strip()
-        
         except Exception as e:
-            raise Exception(f"Image OCR extraction failed: {str(e)}")
+            raise Exception(f"Image OCR extraction failed: {e}")
     
-    def _extract_from_txt(self, file_path):
-        """Extract text from plain text file"""
-        print("   🔍 Extracting from TXT...")
-        
+    def _extract_from_txt(self, file):
+        """Extract text from text file"""
         try:
-            with open(file_path, 'r', encoding='utf-8') as txt_file:
-                text = txt_file.read()
-            
-            if not text.strip():
-                raise ValueError("Text file is empty")
-            
-            return text.strip()
-        
+            content = file.read()
+            if isinstance(content, bytes):
+                return content.decode('utf-8').strip()
+            return content.strip()
         except Exception as e:
-            raise Exception(f"Text extraction failed: {str(e)}")
-    
-    def save_resume_metadata(self, metadata, output_name=None):
-        """Save resume metadata to JSON"""
-        if not output_name:
-            output_name = metadata['candidate_name']
-        
-        metadata_file = self.resumes_dir / f"{output_name}_metadata.json"
-        
-        with open(metadata_file, 'w', encoding='utf-8') as f:
-            json.dump(metadata, f, indent=2, ensure_ascii=False)
-        
-        print(f"   💾 Metadata saved: {metadata_file}")
-        return metadata_file
-    
-    def get_sample_resumes_info(self):
-        """Get information about all processed resumes"""
-        resumes_info = []
-        
-        metadata_files = self.resumes_dir.glob("*_metadata.json")
-        
-        for meta_file in metadata_files:
-            with open(meta_file, 'r', encoding='utf-8') as f:
-                metadata = json.load(f)
-                resumes_info.append(metadata)
-        
-        return resumes_info
+            raise Exception(f"Text extraction failed: {e}")
