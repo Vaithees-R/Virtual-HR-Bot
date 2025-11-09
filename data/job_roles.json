@@ -1,0 +1,92 @@
+{
+  "Python Developer": {
+    "description": "Develops backend systems and applications using the Python programming language.",
+    "skills": ["Python", "Django", "Flask", "FastAPI", "SQL", "REST APIs", "ORM"],
+    "level": "mid",
+    "responsibilities": "Design scalable systems, write clean code, optimize performance, collaborate with teams.",
+    "keywords": ["backend", "api development", "ORM", "microservices", "django", "flask", "data processing"],
+    "related_roles": ["Backend Developer", "Full Stack Developer", "MLOps Engineer"],
+    "expected_outcomes": "Deliver optimized backend services, integrate APIs, and ensure scalability."
+  },
+  "Frontend Developer": {
+    "description": "Builds the user interface (UI) and user experience (UX) of web applications.",
+    "skills": ["JavaScript", "React", "Angular", "Vue.js", "HTML5", "CSS3", "TypeScript", "Responsive Design"],
+    "level": "mid",
+    "responsibilities": "Develop responsive UIs, optimize web performance, collaborate with designers, consume APIs.",
+    "keywords": ["ui", "ux", "react", "responsive design", "web performance", "css", "javascript", "typescript"],
+    "related_roles": ["Full Stack Developer"],
+    "expected_outcomes": "Deliver fast, accessible, and responsive user interfaces that match design specifications."
+  },
+  "Backend Developer": {
+    "description": "Develops server-side logic, APIs, and database interactions for web applications.",
+    "skills": ["Node.js", "Java", "Python", "Go", "SQL", "NoSQL", "REST APIs", "Microservices"],
+    "level": "mid",
+    "responsibilities": "Build and maintain APIs, manage databases, ensure security and scalability, handle business logic.",
+    "keywords": ["server-side", "api", "database", "microservices", "scalability", "security", "nodejs", "java"],
+    "related_roles": ["Python Developer", "Full Stack Developer", "Cloud Engineer", "System Architect"],
+    "expected_outcomes": "Deliver secure, scalable, and high-performance APIs and backend systems."
+  },
+  "DevOps Engineer": {
+    "description": "Manages infrastructure, automation, and deployment pipelines to bridge development and operations.",
+    "skills": ["CI/CD", "Docker", "Kubernetes", "Terraform", "AWS", "GCP", "Azure", "Bash", "Python"],
+    "level": "mid",
+    "responsibilities": "Build CI/CD pipelines, manage cloud infrastructure, ensure reliability (SRE), automate deployments.",
+    "keywords": ["ci-cd", "automation", "infrastructure", "kubernetes", "docker", "terraform", "sre", "cloud"],
+    "related_roles": ["Cloud Engineer", "MLOps Engineer", "System Architect"],
+    "expected_outcomes": "Create a stable, automated infrastructure; enable fast and reliable deployments; improve system reliability."
+  },
+  "Data Scientist": {
+    "description": "Analyzes complex data to find insights and builds machine learning models to make predictions.",
+    "skills": ["Python", "R", "SQL", "Machine Learning", "Statistics", "Pandas", "Scikit-learn", "TensorFlow"],
+    "level": "mid",
+    "responsibilities": "Perform EDA, build predictive models, communicate insights to stakeholders, design A/B tests.",
+    "keywords": ["machine learning", "statistics", "python", "r", "predictive modeling", "eda", "data visualization"],
+    "related_roles": ["MLOps Engineer"],
+    "expected_outcomes": "Deliver actionable insights from data and build accurate predictive models that drive business value."
+  },
+  "MLOps Engineer": {
+    "description": "Manages the lifecycle of machine learning models, from deployment to monitoring and retraining.",
+    "skills": ["MLOps", "Kubernetes", "Docker", "Python", "MLflow", "Kubeflow", "CI/CD", "AWS/GCP/Azure"],
+    "level": "mid",
+    "responsibilities": "Build ML pipelines, deploy models, monitor for drift, manage infrastructure for ML.",
+    "keywords": ["mlops", "machine learning", "deployment", "monitoring", "ci-cd", "kubeflow", "mlflow", "automation"],
+    "related_roles": ["Data Scientist", "DevOps Engineer", "Cloud Engineer", "Python Developer"],
+    "expected_outcomes": "Build and maintain a robust, automated platform for the entire ML model lifecycle."
+  },
+  "QA/Test Engineer": {
+    "description": "Ensures software quality by designing and executing manual and automated tests.",
+    "skills": ["QA Methodology", "Selenium", "Cypress", "Jira", "SQL", "API Testing", "Postman", "Playwright"],
+    "level": "mid",
+    "responsibilities": "Write test plans, create test cases, report bugs, develop automation scripts, perform regression testing.",
+    "keywords": ["qa", "testing", "automation", "selenium", "cypress", "bug tracking", "regression", "api testing"],
+    "related_roles": ["Frontend Developer", "Backend Developer", "Full Stack Developer"],
+    "expected_outcomes": "Identify and document defects, ensure high software quality, and increase test coverage through automation."
+  },
+  "System Architect": {
+    "description": "Designs the high-level structure and standards for complex software and IT systems.",
+    "skills": ["System Design", "Architecture Patterns", "Microservices", "Cloud", "NFRs", "Leadership", "TOGAF"],
+    "level": "senior",
+    "responsibilities": "Define technical vision, make high-level design choices, manage technical debt, mentor teams.",
+    "keywords": ["architecture", "system design", "nfrs", "scalability", "microservices", "governance", "strategy"],
+    "related_roles": ["DevOps Engineer", "Cloud Engineer", "Backend Developer", "Full Stack Developer"],
+    "expected_outcomes": "Produce a clear, scalable, and maintainable system architecture that meets all business requirements."
+  },
+  "Cloud Engineer": {
+    "description": "Designs, builds, and manages an organization's cloud infrastructure (e.g., on AWS, GCP, Azure).",
+    "skills": ["AWS", "GCP", "Azure", "Terraform", "Kubernetes", "Networking", "Security", "IAM"],
+    "level": "mid",
+    "responsibilities": "Provision cloud resources, manage networks and security, automate infrastructure, optimize costs.",
+    "keywords": ["cloud", "aws", "gcp", "azure", "infrastructure", "iac", "terraform", "networking", "security"],
+    "related_roles": ["DevOps Engineer", "System Architect", "Backend Developer"],
+    "expected_outcomes": "Deliver a secure, scalable, and cost-optimized cloud infrastructure."
+  },
+  "Full Stack Developer": {
+    "description": "Works on both frontend and backend technologies to build complete web applications.",
+    "skills": ["JavaScript", "React", "Node.js", "Python", "SQL", "HTML/CSS", "REST APIs", "Databases"],
+    "level": "mid",
+    "responsibilities": "Build full-stack features, create responsive UIs, implement APIs, manage databases.",
+    "keywords": ["full-stack", "react", "nodejs", "javascript", "frontend", "backend", "web development"],
+    "related_roles": ["Frontend Developer", "Backend Developer", "Python Developer", "System Architect"],
+    "expected_outcomes": "Deliver complete, end-to-end user features, from the UI to the database."
+  }
+}

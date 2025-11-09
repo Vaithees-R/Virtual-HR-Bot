@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>HR Bot - Voice and Ears</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        textarea, select { width: 100%; max-width: 500px; }
+        select { margin-bottom: 15px; }
+        #listen-button { background-color: #f44336; color: white; }
+        #listen-button.listening { background-color: #4CAF50; }
+        #answer-text { font-weight: bold; color: #333; }
+    </style>
+</head>
+<body>
+
+    <h1>HR Bot - Voice (TTS) 🔊</h1>
+    
+    <label for="voice-select">Choose a Voice:</label>
+    <select id="voice-select">
+        <option value="">Loading voices...</option>
+    </select>
+    
+    <textarea id="text-to-speak" rows="3">
+    Hello, what is your biggest strength?
+    </textarea>
+    <br>
+    <button id="speak-button">Play Question</button>
+
+    <hr> <h1>HR Bot - Ears (STT) 🎤</h1>
+    
+    <button id="listen-button">Click to Answer</button>
+    <p><strong>Your Answer:</strong> <span id="answer-text">...</span></p>
+
+    <script>
+        // --- 1. VOICE (TTS) CODE (From before) ---
+        const speakButton = document.getElementById('speak-button');
+        const textToSpeakEl = document.getElementById('text-to-speak');
+        const voiceSelect = document.getElementById('voice-select');
+        const synth = window.speechSynthesis;
+        let voices = [];
+
+        function loadVoices() {
+            voices = synth.getVoices();
+            voiceSelect.innerHTML = '';
+            voices.forEach((voice) => {
+                const option = document.createElement('option');
+                option.textContent = `${voice.name} (${voice.lang})`;
+                option.value = voice.name;
+                voiceSelect.appendChild(option);
+            });
+        }
+
+        loadVoices();
+        if (synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = loadVoices;
+        }
+
+        speakButton.addEventListener('click', () => {
+            synth.cancel();
+            const text = textToSpeakEl.value;
+            const utterance = new SpeechSynthesisUtterance(text);
+            const selectedVoiceName = voiceSelect.value;
+            const selectedVoice = voices.find(voice => voice.name === selectedVoiceName);
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+            }
+            synth.speak(utterance);
+        });
+
+        // --- 2. EARS (STT) CODE (New part) ---
+        const listenButton = document.getElementById('listen-button');
+        const answerText = document.getElementById('answer-text');
+
+        // Create the "recognition" object.
+        // The 'webkit' part is for browser compatibility.
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+
+        // Configure it
+        recognition.lang = 'en-US';       // Set language
+        recognition.interimResults = false; // We only want the final, complete result
+        recognition.maxAlternatives = 1;    // Only give us the single best guess
+
+        // --- This is what happens when you click the button ---
+        listenButton.addEventListener('click', () => {
+            answerText.textContent = "Listening...";
+            listenButton.textContent = "Listening...";
+            listenButton.classList.add('listening'); // Make button green
+            
+            // Start listening
+            recognition.start();
+        });
+
+        // --- This event fires when the speech is recognized ---
+        recognition.onresult = (event) => {
+            // Get the transcribed text
+            const transcript = event.results[0][0].transcript;
+            
+            // Display the text on the page
+            answerText.textContent = transcript;
+            
+            // NEXT STEP: In your real project, you would now take this
+            // 'transcript' variable and send it to your Python backend
+            // for the Gemini API to check.
+        };
+
+        // --- This event fires when listening stops ---
+        recognition.onend = () => {
+            listenButton.textContent = "Click to Answer";
+            listenButton.classList.remove('listening'); // Make button red again
+        };
+
+        // --- Handle errors ---
+        recognition.onerror = (event) => {
+            answerText.textContent = 'Error listening: ' + event.error;
+            listenButton.textContent = "Click to Answer";
+            listenButton.classList.remove('listening');
+        };
+
+    </script>
+
+</body>
+</html>

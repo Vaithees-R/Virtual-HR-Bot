@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>HR Bot Sound Test</title>
+</head>
+<body>
+
+    <h1>HR Bot Voice Test</h1>
+    
+    <textarea id="text-to-speak" rows="4" cols="50">
+Hello, I am your AI interviewer. What is your experience with Python?
+    </textarea>
+    <br>
+    <button id="speak-button">🔊 Play Question</button>
+
+    <script>
+        // Get the button and text area elements
+        const speakButton = document.getElementById('speak-button');
+        const textToSpeak = document.getElementById('text-to-speak');
+        
+        // This is the main "speech engine" from the browser
+        const synth = window.speechSynthesis;
+
+        // --- This is the function that does all the work ---
+        function speakText() {
+            // Get the text from the text area
+            const text = textToSpeak.value;
+
+            // 1. Create a new "utterance" object
+            // This holds the text and settings
+            const utterance = new SpeechSynthesisUtterance(text);
+
+            // 2. (Optional) Customize the voice
+            // You can log this to see all available voices
+            // console.log(synth.getVoices()); 
+            
+            // Example of setting a different voice
+            // const voices = synth.getVoices();
+            // utterance.voice = voices[1]; // Try different numbers
+            
+            utterance.rate = 0.9;  // Make it speak a little slower (1 is normal)
+            utterance.pitch = 1.0; // Normal pitch
+
+            // 3. Make it speak!
+            synth.speak(utterance);
+        }
+
+        // Add the click event to the button
+        speakButton.addEventListener('click', speakText);
+    </script>
+
+</body>
+</html>

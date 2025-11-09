@@ -1,0 +1,26 @@
+[
+  {
+    "content": "Technical questions should assess both theoretical knowledge and practical application. Include real-world coding or debugging scenarios.",
+    "category": "question_design",
+    "weight": 0.4
+  },
+  {
+    "content": "Behavioral questions should explore teamwork, leadership, and adaptability using the STAR method (Situation, Task, Action, Result).",
+    "category": "question_design",
+    "weight": 0.3
+  },
+  {
+    "content": "When evaluating answers, consider relevance, depth of knowledge, clarity, confidence, and communication flow.",
+    "category": "evaluation",
+    "weight": 0.2
+  },
+  {
+    "content": "Use a 5-point scoring scale: 5 = Excellent (clear, insightful, structured), 4 = Good (mostly correct), 3 = Fair (basic understanding), 2 = Weak (partial), 1 = Poor (off-topic).",
+    "category": "evaluation",
+    "weight": 0.1
+  },
+  {
+    "content": "Generate personalized feedback highlighting strengths, weaknesses, and one suggestion for improvement.",
+    "category": "feedback"
+  }
+]

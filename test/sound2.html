@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>HR Bot Voice Test (Robust Fix)</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        textarea, select { width: 100%; max-width: 500px; }
+        select { margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+    <h1>HR Bot Voice Test (Robust Fix)</h1>
+
+    <label for="voice-select">Choose a Voice:</label>
+    <select id="voice-select">
+        <option value="">Loading voices...</option>
+    </select>
+    
+    <textarea id="text-to-speak" rows="4">
+    This time, my voice should be different.
+    </textarea>
+    <br>
+    <button id="speak-button">🔊 Play Question</button>
+
+    <script>
+        const speakButton = document.getElementById('speak-button');
+        const textToSpeakEl = document.getElementById('text-to-speak');
+        const voiceSelect = document.getElementById('voice-select');
+        
+        const synth = window.speechSynthesis;
+        let voices = [];
+
+        function loadVoices() {
+            voices = synth.getVoices();
+            voiceSelect.innerHTML = ''; // Clear the dropdown
+
+            if (voices.length === 0) {
+                voiceSelect.innerHTML = '<option>No voices found</option>';
+                return;
+            }
+
+            voices.forEach((voice) => {
+                const option = document.createElement('option');
+                option.textContent = `${voice.name} (${voice.lang})`;
+                
+                // --- FIX 1: Store the voice's NAME as the value ---
+                option.value = voice.name; 
+                
+                voiceSelect.appendChild(option);
+            });
+        }
+
+        loadVoices();
+        if (synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = loadVoices;
+        }
+
+        function speakText() {
+            // --- FIX 2: Cancel any previous speech ---
+            // This prevents the engine from getting "stuck"
+            synth.cancel();
+
+            const text = textToSpeakEl.value;
+            const utterance = new SpeechSynthesisUtterance(text);
+
+            // Get the NAME of the selected voice
+            const selectedVoiceName = voiceSelect.value;
+
+            // --- FIX 3: Find the voice object by its NAME ---
+            const selectedVoice = voices.find(voice => voice.name === selectedVoiceName);
+
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+                console.log("Speaking with:", selectedVoice.name); // Check console
+            } else {
+                console.log("Speaking with default voice.");
+            }
+
+            utterance.rate = 0.9;
+            utterance.pitch = 1.0;
+
+            // Make it speak!
+            synth.speak(utterance);
+        }
+
+        speakButton.addEventListener('click', speakText);
+
+    </script>
+
+</body>
+</html>

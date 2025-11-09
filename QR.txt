@@ -1,0 +1,399 @@
+#!/bin/bash
+# QUICK REFERENCE - Copy-Paste Commands for HR Bot Setup
+
+# ============================================
+# 1. INSTALL SYSTEM DEPENDENCIES
+# ============================================
+
+# Ubuntu/Debian
+sudo apt-get update
+sudo apt-get install tesseract-ocr libpdf-dev
+
+# macOS
+brew install tesseract
+
+# Windows - Download from:
+# https://github.com/UB-Mannheim/tesseract/wiki
+
+# ============================================
+# 2. CREATE PROJECT STRUCTURE
+# ============================================
+
+mkdir -p HR_BOT
+cd HR_BOT
+
+mkdir -p data
+mkdir -p datasets/{resumes,questions,feedback}
+mkdir -p vector_db
+mkdir -p sample_resumes
+
+# ============================================
+# 3. CREATE .env FILE
+# ============================================
+
+cat > .env << 'EOF'
+GEMINI_API_KEY=your_actual_api_key_here
+FLASK_HOST=127.0.0.1
+FLASK_PORT=5000
+DEBUG_MODE=True
+EOF
+
+# ============================================
+# 4. CREATE PYTHON VIRTUAL ENVIRONMENT
+# ============================================
+
+python3 -m venv venv
+source venv/bin/activate  # Linux/macOS
+# OR on Windows:
+# venv\Scripts\activate
+
+# ============================================
+# 5. INSTALL PYTHON DEPENDENCIES
+# ============================================
+
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# Verify installations
+python -c "import PyPDF2; print('✓ PyPDF2')"
+python -c "import pytesseract; print('✓ pytesseract')"
+python -c "import flask; print('✓ Flask')"
+python -c "import chromadb; print('✓ ChromaDB')"
+
+# ============================================
+# 6. VERIFY TESSERACT INSTALLATION
+# ============================================
+
+which tesseract  # Linux/macOS
+tesseract --version
+
+# ============================================
+# 7. CREATE SAMPLE RESUME FILE
+# ============================================
+
+cat > sample_resumes/resume_sample.txt << 'EOF'
+JOHN DOE
+Senior Python Developer | 5+ Years Experience
+
+EXPERIENCE:
+- TechCorp Inc. (2021-Present): Senior Engineer
+  * Built microservices with FastAPI and Docker
+  * Improved performance 40% through optimization
+  * Mentored 3 junior developers
+
+- StartUp Solutions (2018-2021): Full Stack Developer
+  * Created Django and React applications
+  * Handled 1M+ daily requests
+
+SKILLS:
+Python, JavaScript, Django, FastAPI, React, Docker, AWS, PostgreSQL
+
+EDUCATION:
+BS Computer Science - University of Technology (2016)
+
+CERTIFICATIONS:
+AWS Certified Solutions Architect - Associate
+Google Cloud Associate Cloud Engineer
+EOF
+
+# ============================================
+# 8. CREATE SAMPLE DATA FILES
+# ============================================
+
+# Create sample job roles
+cat > data/job_roles.json << 'EOF'
+{
+  "Python Developer": {
+    "description": "Backend developer using Python",
+    "skills": ["Python", "Django", "FastAPI", "SQL"],
+    "level": "mid",
+    "responsibilities": "Build scalable backend systems"
+  },
+  "Full Stack Developer": {
+    "description": "Frontend and backend development",
+    "skills": ["JavaScript", "React", "Python", "SQL"],
+    "level": "mid",
+    "responsibilities": "Build complete web applications"
+  }
+}
+EOF
+
+# ============================================
+# 9. START THE SERVER
+# ============================================
+
+python app.py
+
+# Expected output:
+# ==============================================================================
+# 🤖 HR RAG INTERVIEW SYSTEM - PROFESSIONAL EDITION
+# ==============================================================================
+# ✅ SYSTEM READY FOR INTERVIEWS!
+# 🚀 STARTING FLASK SERVER
+# 📍 URL: http://127.0.0.1:5000
+
+# ============================================
+# 10. TEST ENDPOINTS IN NEW TERMINAL
+# ============================================
+
+# Health check
+curl http://127.0.0.1:5000/health | python -m json.tool
+
+# Upload text resume
+curl -X POST http://127.0.0.1:5000/upload-resume-from-text \
+  -H "Content-Type: application/json" \
+  -d '{
+    "resume_text": "John Doe, Python Developer with 5 years experience",
+    "candidate_name": "John Doe"
+  }'
+
+# Upload file resume (from file)
+curl -X POST -F "file=@sample_resumes/resume_sample.txt" \
+  -F "candidate_name=John Doe" \
+  http://127.0.0.1:5000/upload-resume
+
+# Generate questions
+curl -X POST http://127.0.0.1:5000/generate-questions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "resume": "John Doe, Python Developer with 5 years experience",
+    "job_role": "Python Developer",
+    "num_questions": 10
+  }'
+
+# ============================================
+# 11. OPEN FRONTEND IN BROWSER
+# ============================================
+
+# Copy index.html to web root or serve it
+# Option 1: Direct file
+open index.html
+
+# Option 2: Simple HTTP server
+python -m http.server 8000
+# Then visit: http://localhost:8000/index.html
+
+# ============================================
+# 12. FILE UPLOAD EXAMPLES (CURL)
+# ============================================
+
+# Upload PDF
+curl -X POST -F "file=@resume.pdf" \
+  -F "candidate_name=Jane Smith" \
+  http://127.0.0.1:5000/upload-resume
+
+# Upload PNG (will use OCR)
+curl -X POST -F "file=@resume.png" \
+  http://127.0.0.1:5000/upload-resume
+
+# Upload JPG (will use OCR)
+curl -X POST -F "file=@resume.jpg" \
+  -F "candidate_name=John Smith" \
+  http://127.0.0.1:5000/upload-resume
+
+# ============================================
+# 13. TROUBLESHOOTING COMMANDS
+# ============================================
+
+# Check if Tesseract is installed
+tesseract --version
+
+# Check Python version
+python --version
+
+# List installed packages
+pip list | grep -E "PyPDF2|pytesseract|Pillow|flask"
+
+# Check Flask is working
+python -c "from flask import Flask; print('✓ Flask OK')"
+
+# Test PyPDF2
+python -c "import PyPDF2; print('✓ PyPDF2 OK')"
+
+# Test Tesseract Python binding
+python -c "import pytesseract; print('✓ pytesseract OK')"
+
+# ============================================
+# 14. CREATE SAMPLE METADATA JSON
+# ============================================
+
+cat > datasets/resumes/sample_metadata.json << 'EOF'
+{
+  "candidate_name": "John Doe",
+  "original_filename": "resume.txt",
+  "file_format": "txt",
+  "file_size_kb": 4.5,
+  "processing_date": "2024-01-15T10:30:45",
+  "text_length": 2847,
+  "words": 387
+}
+EOF
+
+# ============================================
+# 15. CREATE SAMPLE SESSION JSON
+# ============================================
+
+cat > datasets/questions/session_001.json << 'EOF'
+{
+  "session_id": "session_001",
+  "date": "2024-01-15T10:00:00",
+  "candidate_name": "John Doe",
+  "job_role": "Python Developer",
+  "questions_used": [
+    "Describe your experience with Python",
+    "How do you approach system design?",
+    "Tell me about your most complex project"
+  ]
+}
+EOF
+
+# ============================================
+# 16. USEFUL ALIASES (Add to ~/.bashrc)
+# ============================================
+
+# Add these to your ~/.bashrc or ~/.zshrc file:
+
+alias hr-start="cd ~/HR_BOT && source venv/bin/activate && python app.py"
+alias hr-test="curl http://127.0.0.1:5000/health | python -m json.tool"
+alias hr-upload="curl -X POST -F 'file=@'"
+alias hr-dev="cd ~/HR_BOT && source venv/bin/activate"
+
+# Then use: hr-start, hr-test, hr-dev
+
+# ============================================
+# 17. DIRECTORY TREE (After Setup)
+# ============================================
+
+# Tree structure:
+# HR_BOT/
+# ├── .env
+# ├── app.py
+# ├── config.py
+# ├── rag_system.py
+# ├── resume_processor.py ← NEW
+# ├── interviewer.py
+# ├── index.html
+# ├── requirements.txt
+# ├── venv/
+# ├── data/
+# │   ├── questions_bank.json
+# │   ├── job_roles.json
+# │   └── interview_guidelines.json
+# ├── datasets/ ← NEW
+# │   ├── resumes/
+# │   ├── questions/
+# │   └── feedback/
+# ├── vector_db/ ← AUTO-CREATED
+# │   └── chromadb/
+# └── sample_resumes/
+#     └── resume_sample.txt
+
+# ============================================
+# 18. QUICK RESTART (If needed)
+# ============================================
+
+# Kill old process
+lsof -ti:5000 | xargs kill -9
+
+# Restart
+python app.py
+
+# ============================================
+# 19. CHECK LOGS
+# ============================================
+
+# The application prints detailed logs to console
+# Look for these indicators:
+# ✓ Success messages
+# ✗ Error messages  
+# 🔍 Processing steps
+# 📊 Statistics
+
+# ============================================
+# 20. CLEAN UP (if needed)
+# ============================================
+
+# Remove processed data
+rm -rf datasets/resumes/*_metadata.json
+rm -rf datasets/questions/*.json
+rm -rf datasets/feedback/*.json
+
+# Reset vector database
+rm -rf vector_db/chromadb
+
+# Keep these directories but empty
+mkdir -p datasets/{resumes,questions,feedback}
+
+# ============================================
+# ENVIRONMENT VARIABLES REFERENCE
+# ============================================
+
+# In .env file:
+GEMINI_API_KEY=your_key_here
+FLASK_HOST=127.0.0.1
+FLASK_PORT=5000
+DEBUG_MODE=True
+
+# Access in Python:
+# import os
+# api_key = os.getenv("GEMINI_API_KEY")
+
+# ============================================
+# API RESPONSE EXAMPLES
+# ============================================
+
+# SUCCESS - Upload Resume
+# {
+#   "success": true,
+#   "resume_text": "John Doe...",
+#   "metadata": {
+#     "candidate_name": "John Doe",
+#     "words": 387,
+#     "file_format": "txt"
+#   }
+# }
+
+# ERROR - Invalid Format
+# {
+#   "error": "Invalid file format. Allowed: pdf, png, jpg, jpeg, txt"
+# }
+
+# ============================================
+# PERFORMANCE TIPS
+# ============================================
+
+# PDF Processing:
+# - Small PDFs (< 1MB): ~0.5 seconds
+# - Large PDFs (1-5MB): ~2-5 seconds
+
+# Image OCR:
+# - PNG/JPG (< 500KB): ~3-5 seconds
+# - Large images (> 2MB): ~10-15 seconds
+
+# Question Generation:
+# - 10 questions: ~3-5 seconds
+# - 15 questions: ~5-7 seconds
+
+# ============================================
+# DEBUGGING
+# ============================================
+
+# Enable verbose output
+export PYTHONUNBUFFERED=1
+python app.py
+
+# Check Tesseract path
+which tesseract
+echo $PATH
+
+# Test OCR directly
+python -c "
+from pytesseract import image_to_string
+from PIL import Image
+text = image_to_string(Image.open('test.png'))
+print(text)
+"
+
+# ============================================
+# END OF QUICK REFERENCE
+# ============================================
