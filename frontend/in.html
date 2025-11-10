@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎯 AI HR Interviewer</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #333;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 850px;
+      margin: auto;
+      background: #fff;
+      border-radius: 15px;
+      padding: 40px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+    }
+    h1 {
+      text-align: center;
+      color: #667eea;
+    }
+    button {
+      background: #667eea;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      cursor: pointer;
+      font-weight: bold;
+      margin: 5px;
+    }
+    button:hover {
+      background: #5565d9;
+    }
+    select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+    }
+    .question-box {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+      margin: 15px 0;
+    }
+    .feedback {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-left: 4px solid #4caf50;
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 10px;
+    }
+    .error {
+      background: #ffebee;
+      color: #d32f2f;
+      padding: 10px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>🎯 AI HR Interviewer</h1>
+    <p style="text-align: center">
+      Upload your resume and practice answering interview questions
+    </p>
+
+    <input type="file" id="resumeFile" accept=".pdf,.png,.jpg,.jpeg,.txt" />
+    <input
+      type="text"
+      id="jobRole"
+      placeholder="Job Role (e.g., Data Scientist)"
+      style="width: 100%; margin-top: 10px; padding: 10px"
+    />
+    <br />
+    <label for="voiceSelect">🎧 Choose Voice:</label>
+    <select id="voiceSelect"><option>Loading voices...</option></select>
+    <button id="uploadBtn">Upload & Generate Questions</button>
+
+    <div id="output"></div>
+  </div>
+
+  <script>
+    const SERVER = "http://127.0.0.1:5000";
+    const outputDiv = document.getElementById("output");
+    let recognition = null;
+    let listening = false;
+    let currentTranscript = "";
+    let selectedVoice = null;
+    let voices = [];
+
+    // 🎙️ Load voices dynamically
+    const synth = window.speechSynthesis;
+    const voiceSelect = document.getElementById("voiceSelect");
+
+    function loadVoices() {
+      voices = synth.getVoices();
+      voiceSelect.innerHTML = "";
+      voices.forEach((voice) => {
+        const option = document.createElement("option");
+        option.textContent = `${voice.name} (${voice.lang})`;
+        option.value = voice.name;
+        voiceSelect.appendChild(option);
+      });
+      selectedVoice = voices[0]; // default
+    }
+
+    loadVoices();
+    if (synth.onvoiceschanged !== undefined) {
+      synth.onvoiceschanged = loadVoices;
+    }
+
+    // Update selected voice
+    voiceSelect.addEventListener("change", () => {
+      selectedVoice = voices.find((v) => v.name === voiceSelect.value);
+    });
+
+    // 🔊 Speak function with custom voice
+    function speakText(text) {
+      if (!text) return;
+      synth.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.9;
+      utterance.pitch = 1.0;
+      utterance.lang = "en-IN";
+      if (selectedVoice) utterance.voice = selectedVoice;
+      synth.speak(utterance);
+    }
+
+    // 📄 Upload & Generate Questions
+    document.getElementById("uploadBtn").addEventListener("click", async () => {
+      const file = document.getElementById("resumeFile").files[0];
+      const jobRole = document.getElementById("jobRole").value.trim();
+      if (!file || !jobRole) return alert("Upload a resume and enter a job role!");
+
+      const formData = new FormData();
+      formData.append("resume", file);
+      formData.append("job_role", jobRole);
+
+      outputDiv.innerHTML = "Processing resume and generating questions... ⏳";
+
+      const res = await fetch(`${SERVER}/upload-resume`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+
+      if (!data.success)
+        return (outputDiv.innerHTML = `<div class='error'>${data.error}</div>`);
+      renderQuestions(data.questions, jobRole);
+    });
+
+    // 🧠 Main Question Flow
+    async function renderQuestions(questions, jobRole) {
+      let index = 0;
+      outputDiv.innerHTML = "";
+
+      const nextQuestion = async () => {
+        if (index >= questions.length) {
+          outputDiv.innerHTML = "<h3>🎉 Interview Finished!</h3>";
+          speakText("Interview finished! Great job!");
+          return;
+        }
+
+        const q = questions[index];
+        outputDiv.innerHTML = `
+          <div class='question-box'>
+            <b>Q${index + 1}:</b> ${q}
+          </div>
+          <button id='speakBtn'>🔊 Hear Question</button>
+          <button id='answerBtn'>🎤 Start Answer</button>
+          <button id='stopBtn' disabled>🛑 Submit Answer</button>
+          <button id='skipBtn'>⏭️ Skip Question</button>
+          <div id='feedback'></div>
+        `;
+
+        document.getElementById("speakBtn").onclick = () => speakText(q);
+
+        document.getElementById("answerBtn").onclick = async () => {
+          if (listening) return;
+          listening = true;
+          document.getElementById("feedback").innerHTML =
+            "🎙️ Listening... You can talk now.";
+          document.getElementById("stopBtn").disabled = false;
+
+          currentTranscript = await startListening();
+          listening = false;
+          document.getElementById("stopBtn").disabled = true;
+
+          if (!currentTranscript) {
+            document.getElementById("feedback").innerHTML =
+              "<div class='error'>❌ Didn't catch anything. Try again!</div>";
+            return;
+          }
+
+          await sendAnswer(q, currentTranscript, jobRole);
+        };
+
+        document.getElementById("stopBtn").onclick = () => {
+          if (recognition && listening) {
+            recognition.stop();
+            document.getElementById("feedback").innerHTML =
+              "🛑 Stopped recording. Processing...";
+          }
+        };
+
+        document.getElementById("skipBtn").onclick = () => {
+          index++;
+          nextQuestion();
+        };
+      };
+
+      nextQuestion();
+
+      async function sendAnswer(question, answer, jobRole) {
+        document.getElementById(
+          "feedback"
+        ).innerHTML = `<p>🗣️ You said: "${answer}"</p> Evaluating...`;
+
+        const feedbackData = await fetch(`${SERVER}/evaluate-answer`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question, answer, job_role: jobRole }),
+        }).then((r) => r.json());
+
+        if (feedbackData.success) {
+          document.getElementById("feedback").innerHTML = `
+            <div class='feedback'>
+              <b>Feedback:</b> ${feedbackData.feedback}<br>
+              <b>Score:</b> ${feedbackData.score}/10
+            </div>
+          `;
+          speakText(`Your score is ${feedbackData.score} out of 10. ${feedbackData.feedback}`);
+
+          setTimeout(() => {
+            index++;
+            nextQuestion();
+          }, 7000);
+        } else {
+          document.getElementById(
+            "feedback"
+          ).innerHTML = `<div class='error'>${feedbackData.error}</div>`;
+        }
+      }
+    }
+
+    // 🎤 Record Answer
+    function startListening() {
+      return new Promise((resolve) => {
+        recognition = new (window.SpeechRecognition ||
+          window.webkitSpeechRecognition)();
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        recognition.lang = "en-IN";
+        recognition.maxAlternatives = 1;
+
+        let transcript = "";
+        let timeout = null;
+
+        recognition.onresult = (event) => {
+          transcript = event.results[event.results.length - 1][0].transcript;
+          if (timeout) clearTimeout(timeout);
+          timeout = setTimeout(() => recognition.stop(), 5000);
+        };
+
+        recognition.onerror = (e) => {
+          console.error("Speech recognition error:", e);
+          resolve(null);
+        };
+
+        recognition.onend = () => resolve(transcript);
+        recognition.start();
+
+        // auto-stop after 15s (failsafe)
+        setTimeout(() => recognition.stop(), 15000);
+      });
+    }
+  </script>
+</body>
+</html>

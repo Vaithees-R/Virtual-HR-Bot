@@ -4,7 +4,7 @@
 ├─ 3. Backend Developer      (100 questions)
 ├─ 4. DevOps Engineer        (100 questions)
 ├─ 5. Data Scientist         (100 questions)
-├─ 6. Mobile Developer       (100 questions)
+├─ 6. MLOps engineer         (100 questions)
 ├─ 7. QA/Test Engineer       (100 questions)
 ├─ 8. System Architect       (100 questions)
 ├─ 9. Cloud Engineer         (100 questions)
