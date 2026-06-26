@@ -234,14 +234,6 @@ rm -rf vector_db/chromadb
 
 ---
 
-## 👤 Author
-
-**Vaithees R**  
-B.Sc. AI & ML | Junior ML Engineer  
-📧 vaithees.r12@gmail.com  
-🔗 [github.com/Vaithees-R](https://github.com/Vaithees-R)
-
----
 
 <div align="center">
 <sub>Built with Python · Flask · ChromaDB · Gemini · Sentence Transformers</sub>
