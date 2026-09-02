@@ -1,5 +1,1 @@
-gemini api : AIzaSyBuQaJencAceWs062_fljpyACK2YWogzHc
 
-api key : AIzaSyCDHWOfD9oP4BQMNsdep58wdo5HeWZdnUM
-
-new key = AIzaSyBWrEvuL2r1AqBLCRvk3Jct-5rtYUVIFVY
