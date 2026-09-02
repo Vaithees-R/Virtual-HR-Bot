@@ -1,4 +1,39 @@
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# API keys / local secret files
 api.txt
 
+# Virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Distribution / build
+build/
+dist/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local databases / generated data
+vector_db/
+*.db
+
+# OS files
+.DS_Store
+Thumbs.db
+
 src/
-.python-version
+src/*
